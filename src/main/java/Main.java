@@ -1,13 +1,12 @@
-import java.sql.*;
+import data.postgres.DBConnection;
+import domain.dao.SQLBNBDao;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception {
-        Connection connection = PGPConnection.newConnection();
-
-        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM Building");
-        while (rs.next()) {
-            System.out.println(rs.getString("street"));
-        }
+    public static void main(String[] args) {
+        DBConnection.connect((connection -> {
+            BNBApplication application = new BNBApplication(new SQLBNBDao(connection));
+            application.insertPackage();
+        }));
     }
 }
