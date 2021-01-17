@@ -79,11 +79,11 @@ public class SQLBNBDao implements BNBDao {
         return paymentMethods;
     }
 
-    private <T> List<T> toList(ResultSet resultSet, SQL.SQLMapper<ResultSet, T> SQLMapper) throws SQLException {
+    private <T> List<T> toList(ResultSet resultSet, SQL.SQLMapper<ResultSet, T> mapper) throws SQLException {
         List<T> elements = new ArrayList<>();
 
         while (resultSet.next()) {
-            elements.add(SQLMapper.map(resultSet));
+            elements.add(mapper.map(resultSet));
         }
 
         return elements;
