@@ -3,8 +3,7 @@ package domain.dao;
 import data.postgres.DBConnection;
 import domain.SQL;
 import domain.entities.Package;
-import domain.entities.PaymentMethod;
-import domain.entities.Room;
+import domain.entities.*;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -22,7 +21,7 @@ public class SQLBNBDao implements BNBDao {
     }
 
     @Override
-    public void insertPackage(Package _package) {
+    public void insertPackage(Package _package, PaymentMethod paymentMethod) {
         connection.makeTransaction(true, (db) -> {
             PreparedStatement insertPackage = db.prepareStatement(Queries.INSERT_PACKAGE);
             insertPackage.setDate(1, Date.valueOf(_package.getStartDate()));
@@ -35,7 +34,7 @@ public class SQLBNBDao implements BNBDao {
             insertPackage.executeUpdate();
 
             PreparedStatement insertOffers = db.prepareStatement(Queries.INSERT_OFFERS);
-            insertOffers.setInt(1, _package.getPaymentMethod());
+            insertOffers.setInt(1, paymentMethod.getCode());
             insertOffers.setDate(2, Date.valueOf(_package.getStartDate()));
             insertOffers.setInt(3, _package.getRoomNo());
             insertOffers.setString(4, _package.getStreet());
@@ -46,19 +45,28 @@ public class SQLBNBDao implements BNBDao {
     }
 
     @Override
+    public void insertBooking(Booking booking, Package _package, PaymentMethod paymentMethod) {
+        connection.makeTransaction(true, (db) -> {
+            // TODO: implement transaction.
+        });
+    }
+
+    @Override
     public List<Room> selectRooms() {
         List<Room> rooms = new ArrayList<>();
 
         connection.makeQuery((db) -> {
-            rooms.addAll(toList(db.createStatement().executeQuery(Queries.SELECT_ROOMS),
-                    (rs) -> new Room(
-                            rs.getInt("roomNo"),
-                            rs.getString("B_street"),
-                            rs.getInt("B_streetNo"),
-                            rs.getInt("B_postalCode"),
-                            rs.getInt("maxPeople"),
-                            rs.getInt("m2")
-                    )));
+            ResultSet resultSet = db.createStatement()
+                    .executeQuery(Queries.SELECT_ROOMS);
+
+            rooms.addAll(toList(resultSet, (rs) -> new Room(
+                    rs.getInt("roomNo"),
+                    rs.getString("B_street"),
+                    rs.getInt("B_streetNo"),
+                    rs.getInt("B_postalCode"),
+                    rs.getInt("maxPeople"),
+                    rs.getInt("m2")
+            )));
         });
 
         return rooms;
@@ -69,14 +77,35 @@ public class SQLBNBDao implements BNBDao {
         List<PaymentMethod> paymentMethods = new ArrayList<>();
 
         connection.makeQuery((db) -> {
-            paymentMethods.addAll(toList(db.createStatement().executeQuery(Queries.SELECT_PAYMENT_METHODS),
-                    (rs) -> new PaymentMethod(
-                            rs.getInt("code"),
-                            rs.getString("Name")
-                    )));
+            ResultSet resultSet = db.createStatement()
+                    .executeQuery(Queries.SELECT_PAYMENT_METHODS);
+
+            paymentMethods.addAll(toList(resultSet, (rs) -> new PaymentMethod(
+                    rs.getInt("code"),
+                    rs.getString("Name")
+            )));
         });
 
         return paymentMethods;
+    }
+
+    @Override
+    public List<Customer> selectCustomers() {
+        List<Customer> customers = new ArrayList<>();
+
+        connection.makeQuery((db) -> {
+            ResultSet resultSet = db.createStatement()
+                    .executeQuery(Queries.SELECT_CUSTOMERS);
+
+            customers.addAll(toList(resultSet, (rs) -> new Customer(
+                    rs.getString("ssn"),
+                    rs.getString("name"),
+                    rs.getString("surname"),
+                    rs.getString("mail")
+            )));
+        });
+
+        return customers;
     }
 
     private <T> List<T> toList(ResultSet resultSet, SQL.SQLMapper<ResultSet, T> mapper) throws SQLException {
@@ -93,6 +122,10 @@ public class SQLBNBDao implements BNBDao {
         private static final String INSERT_PACKAGE = "INSERT INTO Package VALUES (?, ?, ?, ?, ?, ?, ?)";
         private static final String INSERT_OFFERS = "INSERT INTO Offers VALUES (?, ?, ?, ?, ?, ?)";
         private static final String SELECT_ROOMS = "SELECT * FROM Room";
-        private static final String SELECT_PAYMENT_METHODS = "SELECT * FROM PaymentMethod";
+        private static final String SELECT_PAYMENT_METHODS = "SELECT * FROMPaymentMethod";
+        private static final String SELECT_CUSTOMERS = "SELECT ssn, name, surname, mail\n" +
+                "FROM Person AS P\n" +
+                "JOIN ISA_C_P AS I ON P.ssn = I.P_ssn\n" +
+                "JOIN Customer AS C ON I.C_mail = C.mail";
     }
 }

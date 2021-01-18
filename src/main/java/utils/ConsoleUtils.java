@@ -5,7 +5,30 @@ import java.util.Scanner;
 
 public class ConsoleUtils {
 
-    public static <T> int indexedSelection(String message, List<T> list) {
+    public static void show(String message) {
+        System.out.println(message);
+    }
+
+    public static <T> void showList(String message, List<T> list) {
+        System.out.println(message);
+
+        StringBuilder builder = new StringBuilder();
+
+        for (T t : list) {
+            builder.append(t.toString())
+                    .append("\n");
+        }
+
+        System.out.println(builder);
+    }
+
+    public static String promptString(String message) {
+        System.out.println(message);
+
+        return new Scanner(System.in).next();
+    }
+
+    public static <T> T promptIndexedSelection(String message, List<T> list) {
         System.out.println(message);
 
         StringBuilder builder = new StringBuilder();
@@ -20,10 +43,11 @@ public class ConsoleUtils {
 
         int choice;
         do {
-            System.out.println(builder.toString());
+            System.out.println(builder);
             choice = new Scanner(System.in).nextInt();
+            if (choice < 0 || choice >= list.size()) System.out.println("Please choose a valid element.");
         } while (choice < 0 || choice >= list.size());
 
-        return choice;
+        return list.get(choice);
     }
 }

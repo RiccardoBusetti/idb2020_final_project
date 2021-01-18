@@ -8,9 +8,8 @@ public class Package {
     private Integer streetNo;
     private Integer postalCode;
     private Integer costPerNight;
-    private Integer paymentMethod;
 
-    public Package(String startDate, String endDate, Integer roomNo, String street, Integer streetNo, Integer postalCode, Integer costPerNight, Integer paymentMethod) {
+    public Package(String startDate, String endDate, Integer roomNo, String street, Integer streetNo, Integer postalCode, Integer costPerNight) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.roomNo = roomNo;
@@ -18,7 +17,6 @@ public class Package {
         this.streetNo = streetNo;
         this.postalCode = postalCode;
         this.costPerNight = costPerNight;
-        this.paymentMethod = paymentMethod;
     }
 
     public String getStartDate() {
@@ -77,14 +75,6 @@ public class Package {
         this.costPerNight = costPerNight;
     }
 
-    public Integer getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(Integer paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
     @Override
     public String toString() {
         return "Package{" +
@@ -95,7 +85,6 @@ public class Package {
                 ", streetNo=" + streetNo +
                 ", postalCode=" + postalCode +
                 ", costPerNight=" + costPerNight +
-                ", paymentMethod=" + paymentMethod +
                 '}';
     }
 }

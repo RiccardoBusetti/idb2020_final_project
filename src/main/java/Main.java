@@ -5,8 +5,7 @@ public class Main {
 
     public static void main(String[] args) {
         DBConnection.connect((connection -> {
-            BNBApplication application = new BNBApplication(new SQLBNBDao(connection));
-            application.insertPackage();
+            new BNBApplication(new SQLBNBDao(connection)).start();
         }));
     }
 }
