@@ -4,6 +4,7 @@ import data.postgres.DBConnection;
 import domain.SQL;
 import domain.entities.Package;
 import domain.entities.*;
+import kotlin.OverloadResolutionByLambdaReturnType;
 import org.postgresql.util.PGobject;
 
 import java.sql.Date;
@@ -181,6 +182,28 @@ public class SQLBNBDao implements BNBDao {
         return packages;
     }
 
+    @Override
+    public List<Package> selectPackagesWithGiveDate(String startDate, String endDate) {
+        List<Package> packages = new ArrayList<>();
+
+        connection.makeQuery((db) -> {
+            PreparedStatement packagesWithDate = db.prepareStatement(Queries.SELECT_PACKAGES_WITH_DATES);
+            packagesWithDate.setDate(1, Date.valueOf(startDate));
+            packagesWithDate.setDate(2, Date.valueOf(endDate));
+
+            packages.addAll(toList(packagesWithDate.executeQuery(), (rs) -> new Package(
+                    rs.getString("startDate"),
+                    rs.getString("endDate"),
+                    rs.getInt("R_roomNo"),
+                    rs.getString("R_B_street"),
+                    rs.getInt("R_B_streetNo"),
+                    rs.getInt("R_B_postalCode"),
+                    rs.getInt("costPerNight")
+            )));
+                });
+        return packages;
+    }
+
     private <T> List<T> toList(ResultSet resultSet, SQL.SQLMapper<ResultSet, T> mapper) throws SQLException {
         List<T> elements = new ArrayList<>();
 
@@ -218,5 +241,7 @@ public class SQLBNBDao implements BNBDao {
                 "JOIN ISA_C_P AS I ON P.ssn = I.P_ssn\n" +
                 "JOIN Customer AS C ON I.C_mail = C.mail";
         private static final String SELECT_PACKAGES = "SELECT * FROM Package";
+        private static final String SELECT_PACKAGES_WITH_DATES = "SELECT * " +
+                "FROM PACKAGE WHERE NOT ((P.endDate <= ?) OR (? <= P.startDate))";
     }
 }
