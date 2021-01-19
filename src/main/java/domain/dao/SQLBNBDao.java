@@ -200,7 +200,7 @@ public class SQLBNBDao implements BNBDao {
                     rs.getInt("R_B_postalCode"),
                     rs.getInt("costPerNight")
             )));
-                });
+        });
         return packages;
     }
 
