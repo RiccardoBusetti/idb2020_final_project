@@ -242,6 +242,6 @@ public class SQLBNBDao implements BNBDao {
                 "JOIN Customer AS C ON I.C_mail = C.mail";
         private static final String SELECT_PACKAGES = "SELECT * FROM Package";
         private static final String SELECT_PACKAGES_WITH_DATES = "SELECT * " +
-                "FROM PACKAGE WHERE NOT ((P.endDate <= ?) OR (? <= P.startDate))";
+                "FROM PACKAGE WHERE ((P.endDate >= ?) AND (? >= P.startDate))";
     }
 }
