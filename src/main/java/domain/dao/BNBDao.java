@@ -9,11 +9,15 @@ public interface BNBDao {
 
     void insertPackage(Package _package, PaymentMethod paymentMethod);
 
-    void insertBooking(Booking booking, Package _package, PaymentMethod paymentMethod);
+    void insertBooking(Booking booking, Customer customer, Package _package, PaymentMethod paymentMethod);
 
     List<Room> selectRooms();
 
     List<PaymentMethod> selectPaymentMethods();
 
+    List<PaymentMethod> selectPaymentMethodsOfPackage(Package _package);
+
     List<Customer> selectCustomers();
+
+    List<Package> selectPackages();
 }

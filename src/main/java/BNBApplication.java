@@ -1,11 +1,10 @@
 import domain.dao.BNBDao;
 import domain.entities.Package;
-import domain.entities.PaymentMethod;
-import domain.entities.Room;
+import domain.entities.*;
 import utils.ConsoleUtils;
+import utils.UUIDUtils;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,13 +21,18 @@ public class BNBApplication {
     }
 
     private void promptMenu() {
-        ConsoleUtils.promptIndexedSelection(
-                "SELECT A FUNCTION: ",
-                Arrays.stream(Query.values()).collect(Collectors.toList())
-        ).block.apply(dao);
+        while (true) {
+            Function<BNBDao, Boolean> block = ConsoleUtils.promptIndexedSelection(
+                    "SELECT A FUNCTION: ",
+                    Arrays.stream(Query.values()).collect(Collectors.toList())
+            ).block;
+            if (block == null) return;
+            block.apply(dao);
+        }
     }
 
     public enum Query {
+        EXIT("Exit the program", "Exits the program.", null),
         INSERT_PACKAGE(
                 "Insert a new package",
                 "Inserts a new package into the database.",
@@ -59,25 +63,20 @@ public class BNBApplication {
     public static final class InsertPackage implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
-            List<Room> rooms = dao.selectRooms();
             Room selectedRoom =
-                    ConsoleUtils.promptIndexedSelection("SELECT A ROOM: ", rooms);
+                    ConsoleUtils.promptIndexedSelection("SELECT A ROOM: ", dao.selectRooms());
 
-            List<PaymentMethod> paymentMethod = dao.selectPaymentMethods();
             PaymentMethod selectedPaymentMethod =
-                    ConsoleUtils.promptIndexedSelection("SELECT A PAYMENT METHOD: ", paymentMethod);
-
-            String startDate = ConsoleUtils.promptString("INSERT A STARTING DATE: ");
-            String endingDate = ConsoleUtils.promptString("INSERT AN ENDING DATE: ");
+                    ConsoleUtils.promptIndexedSelection("SELECT A PAYMENT METHOD: ", dao.selectPaymentMethods());
 
             dao.insertPackage(new Package(
-                    startDate,
-                    endingDate,
+                    ConsoleUtils.promptString("INSERT A STARTING DATE: "),
+                    ConsoleUtils.promptString("INSERT AN ENDING DATE: "),
                     selectedRoom.getRoomNo(),
                     selectedRoom.getStreet(),
                     selectedRoom.getStreetNo(),
                     selectedRoom.getPostalCode(),
-                    0
+                    ConsoleUtils.promptInteger("INSERT THE COST PER NIGHT: ")
             ), selectedPaymentMethod);
 
             return true;
@@ -87,7 +86,26 @@ public class BNBApplication {
     private static final class BookPackage implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
-            // TODO: implement the booking of a package.
+            Package selectedPackage =
+                    ConsoleUtils.promptIndexedSelection("SELECT A PACKAGE: ", dao.selectPackages());
+
+            Customer selectedCustomer =
+                    ConsoleUtils.promptIndexedSelection("SELECT A CUSTOMER: ", dao.selectCustomers());
+
+            PaymentMethod selectedPaymentMethod =
+                    ConsoleUtils.promptIndexedSelection("SELECT A PAYMENT METHOD: ", dao.selectPaymentMethodsOfPackage(selectedPackage));
+
+            dao.insertBooking(
+                    new Booking(
+                            UUIDUtils.generateUUIDv4(),
+                            ConsoleUtils.promptString("SELECT A STARTING DATE: "),
+                            ConsoleUtils.promptString("SELECT AN ENDING DATE: ")
+                    ),
+                    selectedCustomer,
+                    selectedPackage,
+                    selectedPaymentMethod
+            );
+
             return true;
         }
     }

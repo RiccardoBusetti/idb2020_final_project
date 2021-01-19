@@ -48,7 +48,16 @@ public class DBConnection {
             connection.commit();
             connection.setAutoCommit(true);
         } catch (SQLException e) {
+            rollback();
             System.out.println("Error while performing a transaction: " + e.getMessage());
+        }
+    }
+
+    private void rollback() {
+        try {
+            connection.rollback();
+        } catch (SQLException e) {
+            System.out.println("Error while performing the rollback: " + e.getMessage());
         }
     }
 
@@ -81,5 +90,4 @@ public class DBConnection {
             System.out.println("Error while loading the driver.");
         }
     }
-
 }

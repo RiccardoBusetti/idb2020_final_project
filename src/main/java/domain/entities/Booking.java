@@ -7,6 +7,12 @@ public class Booking {
     private String reviewMessage;
     private int reviewStars;
 
+    public Booking(String uuid, String startDate, String endDate) {
+        this.uuid = uuid;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     public Booking(String uuid, String startDate, String endDate, String reviewMessage, int reviewStars) {
         this.uuid = uuid;
         this.startDate = startDate;
@@ -15,11 +21,11 @@ public class Booking {
         this.reviewStars = reviewStars;
     }
 
-    public String getUuid() {
+    public String getUUID() {
         return uuid;
     }
 
-    public void setUuid(String uuid) {
+    public void setUUID(String uuid) {
         this.uuid = uuid;
     }
 

@@ -24,8 +24,12 @@ public class ConsoleUtils {
 
     public static String promptString(String message) {
         System.out.println(message);
-
         return new Scanner(System.in).next();
+    }
+
+    public static Integer promptInteger(String message) {
+        System.out.println(message);
+        return new Scanner(System.in).nextInt();
     }
 
     public static <T> T promptIndexedSelection(String message, List<T> list) {
@@ -35,7 +39,7 @@ public class ConsoleUtils {
 
         for (int i = 0; i < list.size(); i++) {
             builder.append("[")
-                    .append(i)
+                    .append(i + 1)
                     .append("] ")
                     .append(list.get(i).toString())
                     .append("\n");
@@ -45,9 +49,9 @@ public class ConsoleUtils {
         do {
             System.out.println(builder);
             choice = new Scanner(System.in).nextInt();
-            if (choice < 0 || choice >= list.size()) System.out.println("Please choose a valid element.");
-        } while (choice < 0 || choice >= list.size());
+            if (choice < 1 || choice > list.size()) System.out.println("Please choose a valid element.");
+        } while (choice < 1 || choice > list.size());
 
-        return list.get(choice);
+        return list.get(choice - 1);
     }
 }
