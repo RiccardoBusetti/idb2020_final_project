@@ -14,6 +14,9 @@ DB_URL=jdbc:postgresql://localhost:dbPort/dbName
 DB_USERNAME=username
 DB_PASSWORD=password
 ```
+
+Once the program is setup, you can download the file `res/db_script.sql` and import it into your PostgresSQL database to initialize
+the schema with sample data.
 ### How to run
 To run the project execute within the project root folder:
 ```bash
