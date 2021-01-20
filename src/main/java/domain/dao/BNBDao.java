@@ -20,4 +20,6 @@ public interface BNBDao {
     List<Customer> selectCustomers();
 
     List<Package> selectPackages();
+
+    List<Package> selectPackagesWithGiveDate(String startDate, String endDate);
 }
