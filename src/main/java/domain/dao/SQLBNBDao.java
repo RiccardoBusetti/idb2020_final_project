@@ -241,7 +241,8 @@ public class SQLBNBDao implements BNBDao {
                 "JOIN ISA_C_P AS I ON P.ssn = I.P_ssn\n" +
                 "JOIN Customer AS C ON I.C_mail = C.mail";
         private static final String SELECT_PACKAGES = "SELECT * FROM Package";
-        private static final String SELECT_PACKAGES_WITH_DATES = "SELECT * " +
-                "FROM PACKAGE WHERE ((P.endDate >= ?) AND (? >= P.startDate))";
+        private static final String SELECT_PACKAGES_WITH_DATES = "SELECT *\n" +
+                "FROM PACKAGE\n" +
+                "WHERE ((P.endDate >= ?) AND (? >= P.startDate))";
     }
 }
