@@ -44,10 +44,10 @@ public class BNBApplication {
                 "Inserts a booking for a package.",
                 new BookPackage()
         ),
-        SELECT_PACKAGE_WITH_GIVEN_DATES(
-                "Select a package within a start date and an end date",
-                "Selects a package with given start and end date.",
-                new PackageWithGivenDates()
+        SELECT_PACKAGES_WITH_POSTAL_CODE(
+                "Select a package with a given postal code",
+                "Selects a package with given postal code.",
+                new PackageWithGivenPostalCode()
         ),
         GET_DATES_WITH_GIVEN_PACKAGE_AND_DATES(
                 "Get dates of bookings of a package with given start date and end date",
@@ -126,7 +126,7 @@ public class BNBApplication {
         }
     }
 
-    private static final class PackageWithGivenDates implements Function<BNBDao, Boolean> {
+    private static final class PackageWithGivenPostalCode implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
             int postalCode =
