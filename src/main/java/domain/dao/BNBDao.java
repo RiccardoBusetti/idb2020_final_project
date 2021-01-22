@@ -21,5 +21,7 @@ public interface BNBDao {
 
     List<Package> selectPackages();
 
-    List<Package> selectPackagesWithGiveDate(String startDate, String endDate);
+    List<Package> selectPackagesWithGiveDate(int postalCode);
+
+    List<Booking> getDatesWherePackageIsBooked(Package _package, String startDate, String endDate);
 }

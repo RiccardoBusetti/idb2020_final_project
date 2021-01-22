@@ -5,6 +5,7 @@ import utils.ConsoleUtils;
 import utils.UUIDUtils;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,6 +43,16 @@ public class BNBApplication {
                 "Book a package",
                 "Inserts a booking for a package.",
                 new BookPackage()
+        ),
+        SELECT_PACKAGE_WITH_GIVEN_DATES(
+                "Select a package within a start date and an end date",
+                "Selects a package with given start and end date.",
+                new PackageWithGivenDates()
+        ),
+        GET_DATES_WITH_GIVEN_PACKAGE_AND_DATES(
+                "Get dates of bookings of a package with given start date and end date",
+                "Returns the start dates and end dates of the bookings of a package within a starting and ending date",
+                new DatesOfBookingsInPackage()
         );
 
         private final String title;
@@ -105,6 +116,48 @@ public class BNBApplication {
                     selectedPackage,
                     selectedPaymentMethod
             );
+
+            return true;
+        }
+    }
+
+    private static final class PackageWithGivenDates implements Function<BNBDao, Boolean> {
+        @Override
+        public Boolean apply(BNBDao dao) {
+            int postalCode =
+                    ConsoleUtils.promptInteger("SELECT A POSTAL CODE: ");
+
+            List<Package> packages = dao.selectPackagesWithGiveDate(postalCode);
+
+            if (packages.isEmpty()) {
+                ConsoleUtils.show("NO PACKAGES WERE FOUND WITH GIVEN POSTAL CODE.\n");
+            } else {
+                ConsoleUtils.showList("PACKAGES WITH GIVEN POSTAL CODE ARE THE FOLLOWING: ", packages);
+            }
+
+            return true;
+        }
+    }
+
+    private static final class DatesOfBookingsInPackage implements Function<BNBDao, Boolean> {
+        @Override
+        public Boolean apply(BNBDao dao) {
+            Package selectedPackage =
+                    ConsoleUtils.promptIndexedSelection("SELECT A PACKAGE: ", dao.selectPackages());
+
+            String startDate =
+                    ConsoleUtils.promptString("SELECT A STARTING DATE: ");
+
+            String endDate =
+                    ConsoleUtils.promptString("SELECT AN ENDING DATE: ");
+
+            List<Booking> bookings = dao.getDatesWherePackageIsBooked(selectedPackage, startDate, endDate);
+
+            if (bookings.isEmpty()) {
+                ConsoleUtils.show("NO BOOKING WITH GIVEN PACKAGE WITH GIVEN DATES.\n");
+            } else {
+                ConsoleUtils.showList("BOOKINGS WITH GIVEN PACKAGE AND GIVEN START AND END DATE ARE THE FOLLOWING: ", bookings);
+            }
 
             return true;
         }
