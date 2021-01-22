@@ -24,7 +24,7 @@ public class ConsoleUtils {
 
     public static String promptString(String message) {
         System.out.println(message);
-        return new Scanner(System.in).next();
+        return new Scanner(System.in).nextLine();
     }
 
     public static Integer promptInteger(String message) {
