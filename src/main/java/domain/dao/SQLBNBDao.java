@@ -6,7 +6,9 @@ import domain.entities.Package;
 import domain.entities.*;
 import kotlin.OverloadResolutionByLambdaReturnType;
 import org.postgresql.util.PGobject;
+import utils.ConsoleUtils;
 
+import java.awt.print.Book;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -226,6 +228,42 @@ public class SQLBNBDao implements BNBDao {
         return bookings;
     }
 
+    @Override
+    public void insertReview(Booking booking, String review, int stars) {
+        connection.makeTransaction(true, (db) -> {
+            PreparedStatement insertReview = db.prepareStatement(Queries.MAKE_A_REVIEW);
+            insertReview.setString(1, review);
+            insertReview.setInt(2, stars);
+            PGobject uuid = new PGobject();
+            uuid.setType("uuid");
+            uuid.setValue(booking.getUUID());
+            insertReview.setObject(3, uuid);
+            insertReview.executeUpdate();
+            ConsoleUtils.show("REVIEW INSERTED\n");
+        });
+    }
+
+    @Override
+    public List<Booking> selectBooking() {
+        List <Booking> bookings = new ArrayList<>();
+
+        connection.makeQuery((db) -> {
+            ResultSet resultSet = db.createStatement()
+                    .executeQuery(Queries.SELECT_BOOKINGS);
+
+            bookings.addAll(toList(resultSet, (rs) ->
+                    new Booking(
+                            rs.getString("uuid"),
+                            rs.getString("startDate"),
+                            rs.getString("endDate"),
+                            rs.getString("reviewMessage"),
+                            rs.getInt("reviewStars")
+                    )));
+        });
+
+        return bookings;
+    }
+
     private <T> List<T> toList(ResultSet resultSet, SQL.SQLMapper<ResultSet, T> mapper) throws SQLException {
         List<T> elements = new ArrayList<>();
 
@@ -274,5 +312,9 @@ public class SQLBNBDao implements BNBDao {
                 "\tAND T.P_R_B_streetNo = ?\n" +
                 "\tAND T.P_R_B_postalCode = ?\n" +
                 "\tAND NOT ((B.endDate <= ?) OR (? <= B.startDate))";
+        private static final String MAKE_A_REVIEW = "UPDATE Booking\n" +
+            "SET reviewmessage = ?, reviewstars = ?\n" +
+            "WHERE uuid = ?";
+        private static final String SELECT_BOOKINGS = "SELECT * FROM Booking";
     }
 }

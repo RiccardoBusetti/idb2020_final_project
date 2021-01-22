@@ -21,7 +21,11 @@ public interface BNBDao {
 
     List<Package> selectPackages();
 
+    List<Booking> selectBooking();
+
     List<Package> selectPackagesWithGiveDate(int postalCode);
 
     List<Booking> getDatesWherePackageIsBooked(Package _package, String startDate, String endDate);
+
+    void insertReview(Booking booking, String review, int stars);
 }

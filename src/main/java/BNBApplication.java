@@ -51,8 +51,13 @@ public class BNBApplication {
         ),
         GET_DATES_WITH_GIVEN_PACKAGE_AND_DATES(
                 "Get dates of bookings of a package with given start date and end date",
-                "Returns the start dates and end dates of the bookings of a package within a starting and ending date",
+                "Returns the start dates and end dates of the bookings of a package within a starting and ending date.",
                 new DatesOfBookingsInPackage()
+        ),
+        MAKE_REVIEW(
+                "Make a review",
+                "inserts a review in a booking.",
+                new MakeReview()
         );
 
         private final String title;
@@ -158,6 +163,24 @@ public class BNBApplication {
             } else {
                 ConsoleUtils.showList("BOOKINGS WITH GIVEN PACKAGE AND GIVEN START AND END DATE ARE THE FOLLOWING: ", bookings);
             }
+
+            return true;
+        }
+    }
+
+    private static final class MakeReview implements Function<BNBDao, Boolean> {
+        @Override
+        public Boolean apply(BNBDao dao) {
+            Booking selectedBooking =
+                    ConsoleUtils.promptIndexedSelection("SELECT A BOOKING: ", dao.selectBooking());
+
+            String review =
+                    ConsoleUtils.promptString("WRITE A REVIEW: ");
+
+            int stars =
+                    ConsoleUtils.promptInteger("STARS (0-5):");
+
+            dao.insertReview(selectedBooking, review, stars);
 
             return true;
         }
