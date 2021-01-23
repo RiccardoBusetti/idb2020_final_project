@@ -4,11 +4,9 @@ import data.postgres.DBConnection;
 import domain.SQL;
 import domain.entities.Package;
 import domain.entities.*;
-import kotlin.OverloadResolutionByLambdaReturnType;
 import org.postgresql.util.PGobject;
 import utils.ConsoleUtils;
 
-import java.awt.print.Book;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -185,7 +183,7 @@ public class SQLBNBDao implements BNBDao {
     }
 
     @Override
-    public List<Package> selectPackagesWithGiveDate(int postalCode) {
+    public List<Package> selectPackagesWithPostalCode(int postalCode) {
         List<Package> packages = new ArrayList<>();
 
         connection.makeQuery((db) -> {
@@ -202,6 +200,7 @@ public class SQLBNBDao implements BNBDao {
                     rs.getInt("costPerNight")
             )));
         });
+
         return packages;
     }
 
@@ -223,8 +222,10 @@ public class SQLBNBDao implements BNBDao {
                     rs.getString("uuid"),
                     rs.getString("startDate"),
                     rs.getString("endDate")
+
             )));
         });
+
         return bookings;
     }
 
@@ -239,7 +240,6 @@ public class SQLBNBDao implements BNBDao {
             uuid.setValue(booking.getUUID());
             insertReview.setObject(3, uuid);
             insertReview.executeUpdate();
-            ConsoleUtils.show("REVIEW INSERTED\n");
         });
     }
 
@@ -313,7 +313,7 @@ public class SQLBNBDao implements BNBDao {
                 "\tAND T.P_R_B_postalCode = ?\n" +
                 "\tAND NOT ((B.endDate <= ?) OR (? <= B.startDate))";
         private static final String MAKE_A_REVIEW = "UPDATE Booking\n" +
-            "SET reviewmessage = ?, reviewstars = ?\n" +
+            "SET reviewMessage = ?, reviewStars = ?\n" +
             "WHERE uuid = ?";
         private static final String SELECT_BOOKINGS = "SELECT * FROM Booking";
     }

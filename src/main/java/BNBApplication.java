@@ -109,7 +109,8 @@ public class BNBApplication {
                     ConsoleUtils.promptIndexedSelection("SELECT A CUSTOMER: ", dao.selectCustomers());
 
             PaymentMethod selectedPaymentMethod =
-                    ConsoleUtils.promptIndexedSelection("SELECT A PAYMENT METHOD: ", dao.selectPaymentMethodsOfPackage(selectedPackage));
+                    ConsoleUtils.promptIndexedSelection("SELECT A PAYMENT METHOD: ",
+                            dao.selectPaymentMethodsOfPackage(selectedPackage));
 
             dao.insertBooking(
                     new Booking(
@@ -132,7 +133,7 @@ public class BNBApplication {
             int postalCode =
                     ConsoleUtils.promptInteger("SELECT A POSTAL CODE: ");
 
-            List<Package> packages = dao.selectPackagesWithGiveDate(postalCode);
+            List<Package> packages = dao.selectPackagesWithPostalCode(postalCode);
 
             if (packages.isEmpty()) {
                 ConsoleUtils.show("NO PACKAGES WERE FOUND WITH GIVEN POSTAL CODE.\n");
@@ -174,11 +175,9 @@ public class BNBApplication {
             Booking selectedBooking =
                     ConsoleUtils.promptIndexedSelection("SELECT A BOOKING: ", dao.selectBooking());
 
-            String review =
-                    ConsoleUtils.promptString("WRITE A REVIEW: ");
+            String review = ConsoleUtils.promptString("WRITE A REVIEW: ");
 
-            int stars =
-                    ConsoleUtils.promptInteger("STARS (0-5):");
+            int stars = ConsoleUtils.promptInteger("STARS (0-5):");
 
             dao.insertReview(selectedBooking, review, stars);
 

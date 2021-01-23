@@ -23,7 +23,7 @@ public interface BNBDao {
 
     List<Booking> selectBooking();
 
-    List<Package> selectPackagesWithGiveDate(int postalCode);
+    List<Package> selectPackagesWithPostalCode(int postalCode);
 
     List<Booking> getDatesWherePackageIsBooked(Package _package, String startDate, String endDate);
 
