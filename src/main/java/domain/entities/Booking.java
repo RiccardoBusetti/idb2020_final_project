@@ -1,7 +1,5 @@
 package domain.entities;
 
-import java.awt.print.Book;
-
 public class Booking {
     private String uuid;
     private String startDate;

@@ -5,7 +5,6 @@ import domain.SQL;
 import domain.entities.Package;
 import domain.entities.*;
 import org.postgresql.util.PGobject;
-import utils.ConsoleUtils;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -231,7 +230,7 @@ public class SQLBNBDao implements BNBDao {
 
     @Override
     public void insertReview(Booking booking, String review, int stars) {
-        connection.makeTransaction(true, (db) -> {
+        connection.makeTransaction(true, true, (db) -> {
             PreparedStatement insertReview = db.prepareStatement(Queries.MAKE_A_REVIEW);
             insertReview.setString(1, review);
             insertReview.setInt(2, stars);
@@ -245,7 +244,7 @@ public class SQLBNBDao implements BNBDao {
 
     @Override
     public List<Booking> selectBooking() {
-        List <Booking> bookings = new ArrayList<>();
+        List<Booking> bookings = new ArrayList<>();
 
         connection.makeQuery((db) -> {
             ResultSet resultSet = db.createStatement()
@@ -313,8 +312,8 @@ public class SQLBNBDao implements BNBDao {
                 "\tAND T.P_R_B_postalCode = ?\n" +
                 "\tAND NOT ((B.endDate <= ?) OR (? <= B.startDate))";
         private static final String MAKE_A_REVIEW = "UPDATE Booking\n" +
-            "SET reviewMessage = ?, reviewStars = ?\n" +
-            "WHERE uuid = ?";
+                "SET reviewMessage = ?, reviewStars = ?\n" +
+                "WHERE uuid = ?";
         private static final String SELECT_BOOKINGS = "SELECT * FROM Booking";
     }
 }

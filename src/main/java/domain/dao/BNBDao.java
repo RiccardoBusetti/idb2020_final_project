@@ -27,5 +27,5 @@ public interface BNBDao {
 
     List<Booking> getDatesWherePackageIsBooked(Package _package, String startDate, String endDate);
 
-    void insertReview(Booking booking, String review, int stars);
+    void insertReview(Booking booking, String review, int stars) throws RuntimeException;
 }

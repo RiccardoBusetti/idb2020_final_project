@@ -31,14 +31,25 @@ public class DBConnection {
     }
 
     public void makeQuery(SQL.SQLScope<Connection> block) {
+        makeQuery(false, block);
+    }
+
+    public void makeQuery(boolean overrideException, SQL.SQLScope<Connection> block) {
         try {
             block.call(connection);
         } catch (SQLException e) {
-            System.out.println("Error while making a query: " + e.getMessage());
+            if (overrideException)
+                throw new RuntimeException(e.getMessage());
+            else
+                System.out.println("Error while making a query: " + e.getMessage());
         }
     }
 
     public void makeTransaction(boolean setDeferrable, SQL.SQLScope<Connection> block) {
+        makeTransaction(false, setDeferrable, block);
+    }
+
+    public void makeTransaction(boolean overrideException, boolean setDeferrable, SQL.SQLScope<Connection> block) {
         try {
             connection.setAutoCommit(false);
             if (setDeferrable) deferrablePS().executeUpdate();
@@ -49,7 +60,10 @@ public class DBConnection {
             connection.setAutoCommit(true);
         } catch (SQLException e) {
             rollback();
-            System.out.println("Error while performing a transaction: " + e.getMessage());
+            if (overrideException)
+                throw new RuntimeException(e.getMessage());
+            else
+                System.out.println("Error while performing a transaction: " + e.getMessage());
         }
     }
 

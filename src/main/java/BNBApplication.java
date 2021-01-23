@@ -36,27 +36,27 @@ public class BNBApplication {
         EXIT("Exit the program", "Exits the program.", null),
         INSERT_PACKAGE(
                 "Insert a new package",
-                "Inserts a new package into the database.",
+                "Creates a new package available for booking.",
                 new InsertPackage()
         ),
         BOOK_PACKAGE(
                 "Book a package",
-                "Inserts a booking for a package.",
+                "Books a given package for a date interval.",
                 new BookPackage()
         ),
         SELECT_PACKAGES_WITH_POSTAL_CODE(
-                "Select a package with a given postal code",
-                "Selects a package with given postal code.",
+                "Select a package by postal code",
+                "Retrieves the packages with a given postal code.",
                 new PackageWithGivenPostalCode()
         ),
-        GET_DATES_WITH_GIVEN_PACKAGE_AND_DATES(
-                "Get dates of bookings of a package with given start date and end date",
-                "Returns the start dates and end dates of the bookings of a package within a starting and ending date.",
-                new DatesOfBookingsInPackage()
+        SELECT_BOOKINGS_OVERLAPPING_WITH(
+                "Select overlapping bookings by time interval",
+                "Retrieves all the bookings that overlap with a given starting and ending date.",
+                new SelectBookingsOverlappingWith()
         ),
         MAKE_REVIEW(
                 "Make a review",
-                "inserts a review in a booking.",
+                "Inserts a review in a booking.",
                 new MakeReview()
         );
 
@@ -72,22 +72,28 @@ public class BNBApplication {
 
         @Override
         public String toString() {
-            return title.toUpperCase() + ": " + description;
+            return title.toUpperCase() + ": " + description.toLowerCase();
         }
     }
 
     public static final class InsertPackage implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
-            Room selectedRoom =
-                    ConsoleUtils.promptIndexedSelection("SELECT A ROOM: ", dao.selectRooms());
+            Room selectedRoom = ConsoleUtils.promptIndexedSelection(
+                    "SELECT A ROOM: ",
+                    "THERE ARE NO ROOMS AVAILABLE",
+                    dao.selectRooms());
+            if (selectedRoom == null) return false;
 
-            PaymentMethod selectedPaymentMethod =
-                    ConsoleUtils.promptIndexedSelection("SELECT A PAYMENT METHOD: ", dao.selectPaymentMethods());
+            PaymentMethod selectedPaymentMethod = ConsoleUtils.promptIndexedSelection(
+                    "SELECT A PAYMENT METHOD: ",
+                    "THERE ARE NO PAYMENT METHODS AVAILABLE",
+                    dao.selectPaymentMethods());
+            if (selectedPaymentMethod == null) return false;
 
             dao.insertPackage(new Package(
-                    ConsoleUtils.promptString("INSERT A STARTING DATE: "),
-                    ConsoleUtils.promptString("INSERT AN ENDING DATE: "),
+                    ConsoleUtils.promptDate("INSERT A STARTING DATE: "),
+                    ConsoleUtils.promptDate("INSERT AN ENDING DATE: "),
                     selectedRoom.getRoomNo(),
                     selectedRoom.getStreet(),
                     selectedRoom.getStreetNo(),
@@ -102,21 +108,30 @@ public class BNBApplication {
     private static final class BookPackage implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
-            Package selectedPackage =
-                    ConsoleUtils.promptIndexedSelection("SELECT A PACKAGE: ", dao.selectPackages());
+            Package selectedPackage = ConsoleUtils.promptIndexedSelection(
+                    "SELECT A PACKAGE: ",
+                    "THERE ARE NO PACKAGES AVAILABLE",
+                    dao.selectPackages());
+            if (selectedPackage == null) return false;
 
-            Customer selectedCustomer =
-                    ConsoleUtils.promptIndexedSelection("SELECT A CUSTOMER: ", dao.selectCustomers());
+            Customer selectedCustomer = ConsoleUtils.promptIndexedSelection(
+                    "SELECT A CUSTOMER: ",
+                    "THERE ARE NO CUSTOMERS AVAILABLE",
+                    dao.selectCustomers());
+            if (selectedCustomer == null) return false;
 
             PaymentMethod selectedPaymentMethod =
-                    ConsoleUtils.promptIndexedSelection("SELECT A PAYMENT METHOD: ",
+                    ConsoleUtils.promptIndexedSelection(
+                            "SELECT A PAYMENT METHOD: ",
+                            "THERE ARE NO SELECTED PAYMENT METHODS AVAILABLE",
                             dao.selectPaymentMethodsOfPackage(selectedPackage));
+            if (selectedPaymentMethod == null) return false;
 
             dao.insertBooking(
                     new Booking(
                             UUIDUtils.generateUUIDv4(),
-                            ConsoleUtils.promptString("SELECT A STARTING DATE: "),
-                            ConsoleUtils.promptString("SELECT AN ENDING DATE: ")
+                            ConsoleUtils.promptDate("SELECT A STARTING DATE: "),
+                            ConsoleUtils.promptDate("SELECT AN ENDING DATE: ")
                     ),
                     selectedCustomer,
                     selectedPackage,
@@ -130,40 +145,37 @@ public class BNBApplication {
     private static final class PackageWithGivenPostalCode implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
-            int postalCode =
-                    ConsoleUtils.promptInteger("SELECT A POSTAL CODE: ");
+            int postalCode = ConsoleUtils.promptInteger("SELECT A POSTAL CODE: ");
 
             List<Package> packages = dao.selectPackagesWithPostalCode(postalCode);
 
-            if (packages.isEmpty()) {
-                ConsoleUtils.show("NO PACKAGES WERE FOUND WITH GIVEN POSTAL CODE.\n");
-            } else {
-                ConsoleUtils.showList("PACKAGES WITH GIVEN POSTAL CODE ARE THE FOLLOWING: ", packages);
-            }
+            ConsoleUtils.showList(
+                    "PACKAGES WITH GIVEN POSTAL CODE ARE THE FOLLOWING: ",
+                    "NO PACKAGES WERE FOUND WITH GIVEN POSTAL CODE.\n",
+                    packages);
 
             return true;
         }
     }
 
-    private static final class DatesOfBookingsInPackage implements Function<BNBDao, Boolean> {
+    private static final class SelectBookingsOverlappingWith implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
-            Package selectedPackage =
-                    ConsoleUtils.promptIndexedSelection("SELECT A PACKAGE: ", dao.selectPackages());
+            Package selectedPackage = ConsoleUtils.promptIndexedSelection(
+                    "SELECT A PACKAGE: ",
+                    "THERE ARE NO PACKAGES AVAILABLE",
+                    dao.selectPackages());
+            if (selectedPackage == null) return false;
 
-            String startDate =
-                    ConsoleUtils.promptString("SELECT A STARTING DATE: ");
-
-            String endDate =
-                    ConsoleUtils.promptString("SELECT AN ENDING DATE: ");
+            String startDate = ConsoleUtils.promptDate("SELECT A STARTING DATE: ");
+            String endDate = ConsoleUtils.promptDate("SELECT AN ENDING DATE: ");
 
             List<Booking> bookings = dao.getDatesWherePackageIsBooked(selectedPackage, startDate, endDate);
 
-            if (bookings.isEmpty()) {
-                ConsoleUtils.show("NO BOOKING WITH GIVEN PACKAGE WITH GIVEN DATES.\n");
-            } else {
-                ConsoleUtils.showList("BOOKINGS WITH GIVEN PACKAGE AND GIVEN START AND END DATE ARE THE FOLLOWING: ", bookings);
-            }
+            ConsoleUtils.showList(
+                    "BOOKINGS WITH GIVEN PACKAGE AND GIVEN START AND END DATE ARE THE FOLLOWING: ",
+                    "NO BOOKING WITH GIVEN PACKAGE WITH GIVEN DATES.",
+                    bookings);
 
             return true;
         }
@@ -172,14 +184,21 @@ public class BNBApplication {
     private static final class MakeReview implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
-            Booking selectedBooking =
-                    ConsoleUtils.promptIndexedSelection("SELECT A BOOKING: ", dao.selectBooking());
+            Booking selectedBooking = ConsoleUtils.promptIndexedSelection(
+                    "SELECT A BOOKING: ",
+                    "THERE ARE NO BOOKINGS AVAILABLE",
+                    dao.selectBooking());
+            if (selectedBooking == null) return false;
 
             String review = ConsoleUtils.promptString("WRITE A REVIEW: ");
-
             int stars = ConsoleUtils.promptInteger("STARS (0-5):");
 
-            dao.insertReview(selectedBooking, review, stars);
+            try {
+                dao.insertReview(selectedBooking, review, stars);
+                ConsoleUtils.show("BOOKING REVIEWED SUCCESSFULLY");
+            } catch (RuntimeException e) {
+                ConsoleUtils.show("BOOKING REVIEW NOT INSERTED BECAUSE " + e.getMessage());
+            }
 
             return true;
         }
