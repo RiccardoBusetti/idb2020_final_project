@@ -21,6 +21,7 @@ public class DBConnection {
 
     public static void connect(SQL.SQLScope<DBConnection> block) {
         DBConnection connection = new DBConnection();
+        if (connection.connection == null) return;
 
         try {
             block.call(connection);
