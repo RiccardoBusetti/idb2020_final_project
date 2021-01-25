@@ -1,5 +1,6 @@
 package utils;
 
+import java.sql.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -9,8 +10,17 @@ public class ConsoleUtils {
         System.out.println(message);
     }
 
+    public static <T> void showList(String message, String errorMessage, List<T> list) {
+        if (list.isEmpty()) show(errorMessage);
+        else showList(message, list);
+    }
+
     public static <T> void showList(String message, List<T> list) {
-        System.out.println(message);
+        if (list.isEmpty()) {
+            show("THE LIST IS EMPTY");
+        }
+
+        show(message);
 
         StringBuilder builder = new StringBuilder();
 
@@ -19,12 +29,23 @@ public class ConsoleUtils {
                     .append("\n");
         }
 
-        System.out.println(builder);
+        show(builder.toString());
     }
 
     public static String promptString(String message) {
         System.out.println(message);
-        return new Scanner(System.in).next();
+        return new Scanner(System.in).nextLine();
+    }
+
+    public static String promptDate(String message) {
+        try {
+            String string = promptString(message);
+            Date.valueOf(string);
+            return string;
+        } catch (IllegalArgumentException e) {
+            show("THIS IS NOT A VALID DATE");
+            return promptDate(message);
+        }
     }
 
     public static Integer promptInteger(String message) {
@@ -32,8 +53,22 @@ public class ConsoleUtils {
         return new Scanner(System.in).nextInt();
     }
 
+    public static <T> T promptIndexedSelection(String message, String errorMessage, List<T> list) {
+        if (list.isEmpty()) {
+            show(errorMessage);
+            return null;
+        } else {
+            return promptIndexedSelection(message, list);
+        }
+    }
+
     public static <T> T promptIndexedSelection(String message, List<T> list) {
-        System.out.println(message);
+        if (list.isEmpty()) {
+            show("THE LIST IS EMPTY");
+            return null;
+        }
+
+        show(message);
 
         StringBuilder builder = new StringBuilder();
 
@@ -47,9 +82,10 @@ public class ConsoleUtils {
 
         int choice;
         do {
-            System.out.println(builder);
-            choice = new Scanner(System.in).nextInt();
-            if (choice < 1 || choice > list.size()) System.out.println("Please choose a valid element.");
+            show(builder.toString());
+            choice = promptInteger("");
+
+            if (choice < 1 || choice > list.size()) show("Please choose a valid element.");
         } while (choice < 1 || choice > list.size());
 
         return list.get(choice - 1);

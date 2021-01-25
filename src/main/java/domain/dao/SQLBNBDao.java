@@ -4,7 +4,6 @@ import data.postgres.DBConnection;
 import domain.SQL;
 import domain.entities.Package;
 import domain.entities.*;
-import kotlin.OverloadResolutionByLambdaReturnType;
 import org.postgresql.util.PGobject;
 
 import java.sql.Date;
@@ -24,7 +23,7 @@ public class SQLBNBDao implements BNBDao {
 
     @Override
     public void insertPackage(Package _package, PaymentMethod paymentMethod) {
-        connection.makeTransaction(true, (db) -> {
+        connection.makeTransaction(true, true, (db) -> {
             PreparedStatement insertPackage = db.prepareStatement(Queries.INSERT_PACKAGE);
             insertPackage.setDate(1, Date.valueOf(_package.getStartDate()));
             insertPackage.setInt(2, _package.getRoomNo());
@@ -48,7 +47,7 @@ public class SQLBNBDao implements BNBDao {
 
     @Override
     public void insertBooking(Booking booking, Customer customer, Package _package, PaymentMethod paymentMethod) {
-        connection.makeTransaction(true, (db) -> {
+        connection.makeTransaction(true, true, (db) -> {
             PGobject uuid = new PGobject();
             uuid.setType("uuid");
             uuid.setValue(booking.getUUID());
@@ -77,6 +76,20 @@ public class SQLBNBDao implements BNBDao {
             insertWith.setObject(1, uuid);
             insertWith.setInt(2, paymentMethod.getCode());
             insertWith.executeUpdate();
+        });
+    }
+
+    @Override
+    public void insertReview(Booking booking, String review, int stars) {
+        connection.makeTransaction(true, true, (db) -> {
+            PreparedStatement insertReview = db.prepareStatement(Queries.MAKE_A_REVIEW);
+            insertReview.setString(1, review);
+            insertReview.setInt(2, stars);
+            PGobject uuid = new PGobject();
+            uuid.setType("uuid");
+            uuid.setValue(booking.getUUID());
+            insertReview.setObject(3, uuid);
+            insertReview.executeUpdate();
         });
     }
 
@@ -183,13 +196,12 @@ public class SQLBNBDao implements BNBDao {
     }
 
     @Override
-    public List<Package> selectPackagesWithGiveDate(String startDate, String endDate) {
+    public List<Package> selectPackagesWithPostalCode(int postalCode) {
         List<Package> packages = new ArrayList<>();
 
         connection.makeQuery((db) -> {
-            PreparedStatement packagesWithDate = db.prepareStatement(Queries.SELECT_PACKAGES_WITH_DATES);
-            packagesWithDate.setDate(1, Date.valueOf(startDate));
-            packagesWithDate.setDate(2, Date.valueOf(endDate));
+            PreparedStatement packagesWithDate = db.prepareStatement(Queries.SELECT_PACKAGES_WITH_POSTAL_CODE);
+            packagesWithDate.setInt(1, postalCode);
 
             packages.addAll(toList(packagesWithDate.executeQuery(), (rs) -> new Package(
                     rs.getString("startDate"),
@@ -201,7 +213,54 @@ public class SQLBNBDao implements BNBDao {
                     rs.getInt("costPerNight")
             )));
         });
+
         return packages;
+    }
+
+    @Override
+    public List<Booking> getDatesWherePackageIsBooked(Package _package, String startDate, String endDate) {
+        List<Booking> bookings = new ArrayList<>();
+
+        connection.makeQuery((db) -> {
+            PreparedStatement bookingsWithDates = db.prepareStatement(Queries.SELECT_BOOKINGS_WITH_GIVEN_DATES);
+            bookingsWithDates.setDate(1, Date.valueOf(_package.getStartDate()));
+            bookingsWithDates.setInt(2, _package.getRoomNo());
+            bookingsWithDates.setString(3, _package.getStreet());
+            bookingsWithDates.setInt(4, _package.getStreetNo());
+            bookingsWithDates.setInt(5, _package.getPostalCode());
+            bookingsWithDates.setDate(6, Date.valueOf(startDate));
+            bookingsWithDates.setDate(7, Date.valueOf(endDate));
+
+            bookings.addAll(toList(bookingsWithDates.executeQuery(), (rs) -> new Booking(
+                    rs.getString("uuid"),
+                    rs.getString("startDate"),
+                    rs.getString("endDate")
+
+            )));
+        });
+
+        return bookings;
+    }
+
+    @Override
+    public List<Booking> selectBooking() {
+        List<Booking> bookings = new ArrayList<>();
+
+        connection.makeQuery((db) -> {
+            ResultSet resultSet = db.createStatement()
+                    .executeQuery(Queries.SELECT_BOOKINGS);
+
+            bookings.addAll(toList(resultSet, (rs) ->
+                    new Booking(
+                            rs.getString("uuid"),
+                            rs.getString("startDate"),
+                            rs.getString("endDate"),
+                            rs.getString("reviewMessage"),
+                            rs.getInt("reviewStars")
+                    )));
+        });
+
+        return bookings;
     }
 
     private <T> List<T> toList(ResultSet resultSet, SQL.SQLMapper<ResultSet, T> mapper) throws SQLException {
@@ -241,8 +300,20 @@ public class SQLBNBDao implements BNBDao {
                 "JOIN ISA_C_P AS I ON P.ssn = I.P_ssn\n" +
                 "JOIN Customer AS C ON I.C_mail = C.mail";
         private static final String SELECT_PACKAGES = "SELECT * FROM Package";
-        private static final String SELECT_PACKAGES_WITH_DATES = "SELECT *\n" +
-                "FROM PACKAGE\n" +
-                "WHERE ((P.endDate >= ?) AND (? >= P.startDate))";
+        private static final String SELECT_PACKAGES_WITH_POSTAL_CODE = "SELECT *\n" +
+                "FROM Package\n" +
+                "WHERE (? = r_b_postalCode)";
+        private static final String SELECT_BOOKINGS_WITH_GIVEN_DATES = "SELECT *\n" +
+                "FROM Booking AS B JOIN The AS T on B.uuid = T.B_uuid\n" +
+                "WHERE T.P_startDate = ?\n" +
+                "\tAND T.P_R_roomNo = ?\n" +
+                "\tAND T.P_R_B_street = ?\n" +
+                "\tAND T.P_R_B_streetNo = ?\n" +
+                "\tAND T.P_R_B_postalCode = ?\n" +
+                "\tAND NOT ((B.endDate <= ?) OR (? <= B.startDate))";
+        private static final String MAKE_A_REVIEW = "UPDATE Booking\n" +
+                "SET reviewMessage = ?, reviewStars = ?\n" +
+                "WHERE uuid = ?";
+        private static final String SELECT_BOOKINGS = "SELECT * FROM Booking";
     }
 }
