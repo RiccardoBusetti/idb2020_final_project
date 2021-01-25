@@ -7,9 +7,11 @@ import java.util.List;
 
 public interface BNBDao {
 
-    void insertPackage(Package _package, PaymentMethod paymentMethod);
+    void insertPackage(Package _package, PaymentMethod paymentMethod) throws RuntimeException;
 
-    void insertBooking(Booking booking, Customer customer, Package _package, PaymentMethod paymentMethod);
+    void insertBooking(Booking booking, Customer customer, Package _package, PaymentMethod paymentMethod) throws RuntimeException;
+
+    void insertReview(Booking booking, String review, int stars) throws RuntimeException;
 
     List<Room> selectRooms();
 
@@ -26,6 +28,4 @@ public interface BNBDao {
     List<Package> selectPackagesWithPostalCode(int postalCode);
 
     List<Booking> getDatesWherePackageIsBooked(Package _package, String startDate, String endDate);
-
-    void insertReview(Booking booking, String review, int stars) throws RuntimeException;
 }

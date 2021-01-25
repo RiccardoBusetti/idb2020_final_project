@@ -23,7 +23,7 @@ public class SQLBNBDao implements BNBDao {
 
     @Override
     public void insertPackage(Package _package, PaymentMethod paymentMethod) {
-        connection.makeTransaction(true, (db) -> {
+        connection.makeTransaction(true, true, (db) -> {
             PreparedStatement insertPackage = db.prepareStatement(Queries.INSERT_PACKAGE);
             insertPackage.setDate(1, Date.valueOf(_package.getStartDate()));
             insertPackage.setInt(2, _package.getRoomNo());
@@ -47,7 +47,7 @@ public class SQLBNBDao implements BNBDao {
 
     @Override
     public void insertBooking(Booking booking, Customer customer, Package _package, PaymentMethod paymentMethod) {
-        connection.makeTransaction(true, (db) -> {
+        connection.makeTransaction(true, true, (db) -> {
             PGobject uuid = new PGobject();
             uuid.setType("uuid");
             uuid.setValue(booking.getUUID());
@@ -76,6 +76,20 @@ public class SQLBNBDao implements BNBDao {
             insertWith.setObject(1, uuid);
             insertWith.setInt(2, paymentMethod.getCode());
             insertWith.executeUpdate();
+        });
+    }
+
+    @Override
+    public void insertReview(Booking booking, String review, int stars) {
+        connection.makeTransaction(true, true, (db) -> {
+            PreparedStatement insertReview = db.prepareStatement(Queries.MAKE_A_REVIEW);
+            insertReview.setString(1, review);
+            insertReview.setInt(2, stars);
+            PGobject uuid = new PGobject();
+            uuid.setType("uuid");
+            uuid.setValue(booking.getUUID());
+            insertReview.setObject(3, uuid);
+            insertReview.executeUpdate();
         });
     }
 
@@ -226,20 +240,6 @@ public class SQLBNBDao implements BNBDao {
         });
 
         return bookings;
-    }
-
-    @Override
-    public void insertReview(Booking booking, String review, int stars) {
-        connection.makeTransaction(true, true, (db) -> {
-            PreparedStatement insertReview = db.prepareStatement(Queries.MAKE_A_REVIEW);
-            insertReview.setString(1, review);
-            insertReview.setInt(2, stars);
-            PGobject uuid = new PGobject();
-            uuid.setType("uuid");
-            uuid.setValue(booking.getUUID());
-            insertReview.setObject(3, uuid);
-            insertReview.executeUpdate();
-        });
     }
 
     @Override

@@ -33,7 +33,6 @@ public class BNBApplication {
     }
 
     public enum Query {
-        EXIT("Exit the program", "Exits the program.", null),
         INSERT_PACKAGE(
                 "Insert a new package",
                 "Creates a new package available for booking.",
@@ -58,7 +57,8 @@ public class BNBApplication {
                 "Make a review",
                 "Inserts a review in a booking.",
                 new MakeReview()
-        );
+        ),
+        EXIT("Exit the program", "Exits the program.", null);
 
         private final String title;
         private final String description;
@@ -81,25 +81,30 @@ public class BNBApplication {
         public Boolean apply(BNBDao dao) {
             Room selectedRoom = ConsoleUtils.promptIndexedSelection(
                     "SELECT A ROOM: ",
-                    "THERE ARE NO ROOMS AVAILABLE",
+                    "There are no rooms available.\n",
                     dao.selectRooms());
             if (selectedRoom == null) return false;
 
             PaymentMethod selectedPaymentMethod = ConsoleUtils.promptIndexedSelection(
                     "SELECT A PAYMENT METHOD: ",
-                    "THERE ARE NO PAYMENT METHODS AVAILABLE",
+                    "There are no payment methods available.\n",
                     dao.selectPaymentMethods());
             if (selectedPaymentMethod == null) return false;
 
-            dao.insertPackage(new Package(
-                    ConsoleUtils.promptDate("INSERT A STARTING DATE: "),
-                    ConsoleUtils.promptDate("INSERT AN ENDING DATE: "),
-                    selectedRoom.getRoomNo(),
-                    selectedRoom.getStreet(),
-                    selectedRoom.getStreetNo(),
-                    selectedRoom.getPostalCode(),
-                    ConsoleUtils.promptInteger("INSERT THE COST PER NIGHT: ")
-            ), selectedPaymentMethod);
+            try {
+                dao.insertPackage(new Package(
+                        ConsoleUtils.promptDate("INSERT A STARTING DATE: "),
+                        ConsoleUtils.promptDate("INSERT AN ENDING DATE: "),
+                        selectedRoom.getRoomNo(),
+                        selectedRoom.getStreet(),
+                        selectedRoom.getStreetNo(),
+                        selectedRoom.getPostalCode(),
+                        ConsoleUtils.promptInteger("INSERT THE COST PER NIGHT: ")
+                ), selectedPaymentMethod);
+                ConsoleUtils.show("Package inserted successfully.\n");
+            } catch (RuntimeException e) {
+                ConsoleUtils.show("Package couldn't be inserted because: " + e.getMessage() + "\n");
+            }
 
             return true;
         }
@@ -110,33 +115,39 @@ public class BNBApplication {
         public Boolean apply(BNBDao dao) {
             Package selectedPackage = ConsoleUtils.promptIndexedSelection(
                     "SELECT A PACKAGE: ",
-                    "THERE ARE NO PACKAGES AVAILABLE",
+                    "There are no packages available.\n",
                     dao.selectPackages());
             if (selectedPackage == null) return false;
 
             Customer selectedCustomer = ConsoleUtils.promptIndexedSelection(
                     "SELECT A CUSTOMER: ",
-                    "THERE ARE NO CUSTOMERS AVAILABLE",
+                    "There are no customers available.\n",
                     dao.selectCustomers());
             if (selectedCustomer == null) return false;
 
             PaymentMethod selectedPaymentMethod =
                     ConsoleUtils.promptIndexedSelection(
                             "SELECT A PAYMENT METHOD: ",
-                            "THERE ARE NO SELECTED PAYMENT METHODS AVAILABLE",
+                            "There are no payment methods available.\n",
                             dao.selectPaymentMethodsOfPackage(selectedPackage));
             if (selectedPaymentMethod == null) return false;
 
-            dao.insertBooking(
-                    new Booking(
-                            UUIDUtils.generateUUIDv4(),
-                            ConsoleUtils.promptDate("SELECT A STARTING DATE: "),
-                            ConsoleUtils.promptDate("SELECT AN ENDING DATE: ")
-                    ),
-                    selectedCustomer,
-                    selectedPackage,
-                    selectedPaymentMethod
-            );
+
+            try {
+                dao.insertBooking(
+                        new Booking(
+                                UUIDUtils.generateUUIDv4(),
+                                ConsoleUtils.promptDate("SELECT A STARTING DATE: "),
+                                ConsoleUtils.promptDate("SELECT AN ENDING DATE: ")
+                        ),
+                        selectedCustomer,
+                        selectedPackage,
+                        selectedPaymentMethod
+                );
+                ConsoleUtils.show("Booking inserted successfully.\n");
+            } catch (RuntimeException e) {
+                ConsoleUtils.show("Booking couldn't be inserted because: " + e.getMessage() + "\n");
+            }
 
             return true;
         }
@@ -151,7 +162,7 @@ public class BNBApplication {
 
             ConsoleUtils.showList(
                     "PACKAGES WITH GIVEN POSTAL CODE ARE THE FOLLOWING: ",
-                    "NO PACKAGES WERE FOUND WITH GIVEN POSTAL CODE.\n",
+                    "There are no packages with a given postal code.\n",
                     packages);
 
             return true;
@@ -163,7 +174,7 @@ public class BNBApplication {
         public Boolean apply(BNBDao dao) {
             Package selectedPackage = ConsoleUtils.promptIndexedSelection(
                     "SELECT A PACKAGE: ",
-                    "THERE ARE NO PACKAGES AVAILABLE",
+                    "There are no packages available.\n",
                     dao.selectPackages());
             if (selectedPackage == null) return false;
 
@@ -173,8 +184,8 @@ public class BNBApplication {
             List<Booking> bookings = dao.getDatesWherePackageIsBooked(selectedPackage, startDate, endDate);
 
             ConsoleUtils.showList(
-                    "BOOKINGS WITH GIVEN PACKAGE AND GIVEN START AND END DATE ARE THE FOLLOWING: ",
-                    "NO BOOKING WITH GIVEN PACKAGE WITH GIVEN DATES.",
+                    "THESE ARE THE BOOKINGS THAT OVERLAP WITH YOUR DATES: ",
+                    "There are no bookings in this period.\n",
                     bookings);
 
             return true;
@@ -186,18 +197,18 @@ public class BNBApplication {
         public Boolean apply(BNBDao dao) {
             Booking selectedBooking = ConsoleUtils.promptIndexedSelection(
                     "SELECT A BOOKING: ",
-                    "THERE ARE NO BOOKINGS AVAILABLE",
+                    "There are no bookings available.\n",
                     dao.selectBooking());
             if (selectedBooking == null) return false;
 
             String review = ConsoleUtils.promptString("WRITE A REVIEW: ");
-            int stars = ConsoleUtils.promptInteger("STARS (0-5):");
+            int stars = ConsoleUtils.promptInteger("STARS (0-5): ");
 
             try {
                 dao.insertReview(selectedBooking, review, stars);
-                ConsoleUtils.show("BOOKING REVIEWED SUCCESSFULLY");
+                ConsoleUtils.show("Booking reviewed successfully.\n");
             } catch (RuntimeException e) {
-                ConsoleUtils.show("BOOKING REVIEW NOT INSERTED BECAUSE " + e.getMessage());
+                ConsoleUtils.show("Booking review couldn't be inserted because: " + e.getMessage() + "\n");
             }
 
             return true;
