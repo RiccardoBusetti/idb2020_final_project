@@ -58,11 +58,17 @@ public class BNBApplication {
                 "Inserts a review in a booking.",
                 new MakeReview()
         ),
-        EXIT("Exit the program", "Exits the program.", null);
+        EXIT("Exit the program", "Exits the program.");
 
         private final String title;
         private final String description;
         private final Function<BNBDao, Boolean> block;
+
+        Query(String title, String description) {
+            this.title = title;
+            this.description = description;
+            this.block = null;
+        }
 
         Query(String title, String description, Function<BNBDao, Boolean> block) {
             this.title = title;
@@ -113,17 +119,23 @@ public class BNBApplication {
     private static final class BookPackage implements Function<BNBDao, Boolean> {
         @Override
         public Boolean apply(BNBDao dao) {
+            Customer selectedCustomer = ConsoleUtils.promptIndexedSelection(
+                    "SELECT A CUSTOMER: ",
+                    "There are no customers available.\n",
+                    dao.selectCustomers());
+            if (selectedCustomer == null) return false;
+
             Package selectedPackage = ConsoleUtils.promptIndexedSelection(
                     "SELECT A PACKAGE: ",
                     "There are no packages available.\n",
                     dao.selectPackages());
             if (selectedPackage == null) return false;
 
-            Customer selectedCustomer = ConsoleUtils.promptIndexedSelection(
-                    "SELECT A CUSTOMER: ",
-                    "There are no customers available.\n",
-                    dao.selectCustomers());
-            if (selectedCustomer == null) return false;
+            Service selectedExtraService = ConsoleUtils.promptIndexedSelection("" +
+                            "SELECT EXTRA SERVICE (OPTIONAL): ",
+                    "There are no extra services available.\n",
+                    dao.selectExtraServicesOfPackage(selectedPackage));
+            if (selectedExtraService == null) return false;
 
             PaymentMethod selectedPaymentMethod =
                     ConsoleUtils.promptIndexedSelection(
@@ -131,7 +143,6 @@ public class BNBApplication {
                             "There are no payment methods available.\n",
                             dao.selectPaymentMethodsOfPackage(selectedPackage));
             if (selectedPaymentMethod == null) return false;
-
 
             try {
                 dao.insertBooking(
@@ -142,7 +153,8 @@ public class BNBApplication {
                         ),
                         selectedCustomer,
                         selectedPackage,
-                        selectedPaymentMethod
+                        selectedPaymentMethod,
+                        selectedExtraService
                 );
                 ConsoleUtils.show("Booking inserted successfully.\n");
             } catch (RuntimeException e) {

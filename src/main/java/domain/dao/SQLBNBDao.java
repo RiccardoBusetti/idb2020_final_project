@@ -46,7 +46,7 @@ public class SQLBNBDao implements BNBDao {
     }
 
     @Override
-    public void insertBooking(Booking booking, Customer customer, Package _package, PaymentMethod paymentMethod) {
+    public void insertBooking(Booking booking, Customer customer, Package _package, PaymentMethod paymentMethod, Service service) {
         connection.makeTransaction(true, true, (db) -> {
             PGobject uuid = new PGobject();
             uuid.setType("uuid");
@@ -76,6 +76,11 @@ public class SQLBNBDao implements BNBDao {
             insertWith.setObject(1, uuid);
             insertWith.setInt(2, paymentMethod.getCode());
             insertWith.executeUpdate();
+
+            PreparedStatement insertWithExtra = db.prepareStatement(Queries.INSERT_WITH_EXTRA);
+            insertWithExtra.setInt(1, service.getId());
+            insertWithExtra.setObject(2, uuid);
+            insertWithExtra.executeUpdate();
         });
     }
 
@@ -263,6 +268,27 @@ public class SQLBNBDao implements BNBDao {
         return bookings;
     }
 
+    @Override
+    public List<Service> selectExtraServicesOfPackage(Package _package) {
+        List<Service> extraServices = new ArrayList<>();
+
+        connection.makeQuery((db) -> {
+            PreparedStatement resultSet = db.prepareStatement(Queries.SELECT_EXTRA_SERVICES_OF_PACKAGE);
+            resultSet.setDate(1, Date.valueOf(_package.getStartDate()));
+            resultSet.setInt(2, _package.getRoomNo());
+            resultSet.setString(3, _package.getStreet());
+            resultSet.setInt(4, _package.getStreetNo());
+            resultSet.setInt(5, _package.getPostalCode());
+
+            extraServices.addAll(toList(resultSet.executeQuery(), (rs) -> new Service(
+                    rs.getInt("id"),
+                    rs.getString("name")
+            )));
+        });
+
+        return extraServices;
+    }
+
     private <T> List<T> toList(ResultSet resultSet, SQL.SQLMapper<ResultSet, T> mapper) throws SQLException {
         List<T> elements = new ArrayList<>();
 
@@ -280,6 +306,7 @@ public class SQLBNBDao implements BNBDao {
         private static final String INSERT_BOOKS = "INSERT INTO Books VALUES (?, ?)";
         private static final String INSERT_THE = "INSERT INTO The VALUES (?, ?, ?, ?, ?, ?);";
         private static final String INSERT_WITH = "INSERT INTO With_ VALUES (?, ?)";
+        private static final String INSERT_WITH_EXTRA = "INSERT INTO WithExtra VALUES (?, ?)";
         private static final String SELECT_ROOMS = "SELECT * FROM Room";
         private static final String SELECT_PAYMENT_METHODS = "SELECT * FROM PaymentMethod";
         private static final String SELECT_PAYMENT_METHODS_OF_PACKAGE = "SELECT PM.code, PM.name\n" +
@@ -315,5 +342,20 @@ public class SQLBNBDao implements BNBDao {
                 "SET reviewMessage = ?, reviewStars = ?\n" +
                 "WHERE uuid = ?";
         private static final String SELECT_BOOKINGS = "SELECT * FROM Booking";
+        private static final String SELECT_EXTRA_SERVICES_OF_PACKAGE = "SELECT S.id, S.name\n" +
+                "FROM Package AS P\n" +
+                "JOIN Room AS R ON P.R_roomNo = R.roomNo\n" +
+                "AND P.R_B_street = R.B_street\n" +
+                "AND P.R_B_streetNo = R.B_streetNo\n" +
+                "AND P.R_B_postalCode = R.B_postalCode\n" +
+                "JOIN HasExtra AS H ON R.B_street = H.R_B_street\n" +
+                "AND R.B_streetNo = H.R_B_streetNo\n" +
+                "AND R.B_postalCode = H.R_B_postalCode\n" +
+                "JOIN Service AS S ON H.S_id = S.id\n" +
+                "WHERE P.startDate = ? \n" +
+                "AND P.R_roomNo = ? \n" +
+                "AND P.R_B_street = ? \n" +
+                "AND P.R_B_streetNo = ? \n" +
+                "AND P.R_B_postalCode = ?";
     }
 }
